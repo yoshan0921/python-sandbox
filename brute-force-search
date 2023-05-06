@@ -2,14 +2,15 @@ cards = ['J', 'Q', 'K']
 n = len(cards)
 
 for bit in range(1 << n):
-    # print(bit)
+    print("bit=" + str(bit))
     combination = []
     for i in range(n):
+        print("i=" + str(i))
         shift_i = 1 << i
-        # print(shift_i)
+        print("shift_i=" + str(shift_i))
         if bit & shift_i > 0:
             combination.append(cards[i])
     print(combination)
 
 
-print(2 | 4 | 8)
+# print(2 | 4 | 8)
