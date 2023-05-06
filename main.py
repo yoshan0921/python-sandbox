@@ -1,3 +1,5 @@
+import random
+
 def binary_search(data: list, value: int):
     left = 0
     right = len(data) - 1
@@ -12,7 +14,13 @@ def binary_search(data: list, value: int):
     return -1
 
 if __name__ == "__main__":
-    data = [10, 20, 30, 40, 50, 60, 70, 80]
-    result = binary_search(data, 40)
+    print("Please input the number of data.")
+    num_data = int(input())   
+    data = [random.randint(0, 10000) for i in range(num_data)]
+    print(data)
+
+    print("Please select on of the numbers.")
+    value = int(input())
+    result = binary_search(data, value)
     print(result)
 
