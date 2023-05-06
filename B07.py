@@ -10,7 +10,7 @@ _INPUT = """\
 0 3
 5 6
 5 6
-5 6
+0 1
 """
 sys.stdin = io.StringIO(_INPUT)
 
