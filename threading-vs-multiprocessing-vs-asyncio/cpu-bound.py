@@ -1,86 +1,121 @@
+from functools import partial
+import itertools
 import multiprocessing
 import threading
 import asyncio
 import time
 import logging
 
-CPU_LOAD = 10**4
-PROCESSING_MULTIPLICITY = 3
+WORK_MULTIPLICITY = 3
+CPU_LOAD = 10**8
+start = 0.0
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(processName)s_%(threadName)s: %(message)s'
 )
 
 
-def cpu_bound():
-    logging.debug(f"start")
-    start = time.time()
+def worker(n, start_time):
+    logging.debug(f"worker_{n}: start")
+    logging.debug(f"worker_{n}: checkpoint1 = {
+                  time.time() - start_time:06.3f}")
+
+    # cpu-bound
     for i in range(CPU_LOAD):
-        for j in range(CPU_LOAD):
-            pass
-    end = time.time()
-    logging.debug(f"end -> time = {end - start}")
+        # check progress
+        if i == CPU_LOAD//4*1:
+            logging.debug(
+                f"worker_{n}: checkpoint1-1 = {time.time() - start_time:06.3f}")
+        elif i == CPU_LOAD//4*2:
+            logging.debug(
+                f"worker_{n}: checkpoint1-2 = {time.time() - start_time:06.3f}")
+        elif i == CPU_LOAD//4*3:
+            logging.debug(
+                f"worker_{n}: checkpoint1-3 = {time.time() - start_time:06.3f}")
+
+    logging.debug(f"worker_{n}: checkpoint2 = {
+                  time.time() - start_time:06.3f}")
+    logging.debug(f"worker_{n}: end")
 
 
-async def cpu_bound_async():
-    logging.debug(f"start")
-    start = time.time()
+# This is wrapper for worker() to separate arguments
+def wrap_worker(args):
+    return worker(*args)
+
+
+async def worker_async(n, start_time):
+    logging.debug(f"worker_{n}: start")
+    logging.debug(f"worker_{n}: checkpoint1 = {
+                  time.time() - start_time:06.3f}")
+
+    # cpu-bound
     for i in range(CPU_LOAD):
-        for j in range(CPU_LOAD):
-            pass
-    end = time.time()
-    logging.debug(f"end -> time = {end - start}")
+        # check progress
+        if i == CPU_LOAD//4*1:
+            logging.debug(
+                f"worker_{n}: checkpoint1-1 = {time.time() - start_time:06.3f}")
+        elif i == CPU_LOAD//4*2:
+            logging.debug(
+                f"worker_{n}: checkpoint1-2 = {time.time() - start_time:06.3f}")
+        elif i == CPU_LOAD//4*3:
+            logging.debug(
+                f"worker_{n}: checkpoint1-3 = {time.time() - start_time:06.3f}")
+
+    logging.debug(f"worker_{n}: checkpoint2 = {
+                  time.time() - start_time:06.3f}")
+    logging.debug(f"worker_{n}: end")
 
 if __name__ == '__main__':
+    # 1.synchronous
+    logging.debug(f"synchronous: start")
+    start = time.time()
 
-    # 1.sequential
-    logging.debug(f"sequential: start")
-    start_1 = time.time()
-    for i in range(PROCESSING_MULTIPLICITY):
-        cpu_bound()
-    end_1 = time.time()
-    logging.debug(
-        f"sequential: end -> time = {end_1 - start_1}\n")
+    for i in range(WORK_MULTIPLICITY):
+        worker(i, start)
+
+    end_1 = time.time() - start
+    logging.debug(f"synchronous: end = {end_1:06.3f}\n")
 
     # 2.asyncio
     logging.debug(f"asyncio: start")
-    start_2 = time.time()
+    start = time.time()
+
     loop = asyncio.get_event_loop()
     loop.run_until_complete(asyncio.gather(
-        *[cpu_bound_async() for _ in range(PROCESSING_MULTIPLICITY)]))
+        *[worker_async(i, start) for i in range(WORK_MULTIPLICITY)]))
     loop.close()
-    end_2 = time.time()
-    logging.debug(f"asyncio: end -> time = {end_2 - start_2}\n")
+
+    end_2 = time.time() - start
+    logging.debug(f"asyncio: end = {end_2:06.3f}\n")
 
     # 3.threading
     logging.debug(f"threading: start")
-    start_3 = time.time()
-    for i in range(PROCESSING_MULTIPLICITY):
-        threading.Thread(target=cpu_bound).start()
+    start = time.time()
+
+    for i in range(WORK_MULTIPLICITY):
+        threading.Thread(target=worker, args=(i, start)).start()
     for thread in threading.enumerate():
         if thread is not threading.current_thread():
             thread.join()
-    end_3 = time.time()
-    logging.debug(f"threading: end -> time = {end_3 - start_3}\n")
+
+    end_3 = time.time() - start
+    logging.debug(f"threading: end = {end_3:06.3f}\n")
 
     # 4.multiprocessing
     logging.debug(f"multiprocessing: start")
-    start_4 = time.time()
-    process_list = []
-    for i in range(PROCESSING_MULTIPLICITY):
-        p = multiprocessing.Process(target=cpu_bound)
-        process_list.append(p)
-        p.start()
-    for process in process_list:
-        if process is not multiprocessing.current_process():
-            process.join()
-    end_4 = time.time()
-    logging.debug(f"multiprocessing: end -> time = {end_4 - start_4}\n")
+    start = time.time()
+
+    args = [(i, start) for i in range(WORK_MULTIPLICITY)]
+    with multiprocessing.Pool(processes=WORK_MULTIPLICITY) as pool:
+        pool.map(wrap_worker, args)
+
+    end_4 = time.time() - start
+    logging.debug(f"multiprocessing: end = {end_4:06.3f}\n")
 
     # Result
     print("Result:")
-    print(f"1.sequential        : {end_1 - start_1:0.2f}(s)")
-    print(f"2.asyncio           : {end_2 - start_2:0.2f}(s)")
-    print(f"3.threading         : {end_3 - start_3:0.2f}(s)")
-    print(f"4.multiprocessing   : {end_4 - start_4:0.2f}(s)")
+    print(f"1.synchronous       : {end_1:06.3f} seconds")
+    print(f"2.asyncio           : {end_2:06.3f} seconds")
+    print(f"3.threading         : {end_3:06.3f} seconds")
+    print(f"4.multiprocessing   : {end_4:06.3f} seconds")
