@@ -5,7 +5,7 @@ import time
 import logging
 
 WORK_MULTIPLICITY = 3
-CPU_LOAD = 10**8
+CPU_LOAD = 10**7
 IO_LATENCY = 2
 start = 0.0
 
@@ -16,8 +16,11 @@ logging.basicConfig(
 
 
 def worker(n, start_time):
-    logging.debug(f"worker_{n}: start")
-    logging.debug(f"worker_{n}: checkpoint1 = {
+    """
+    For synchronous, threading, multiprocessing
+    """
+    logging.debug(f"worker-{n}: start")
+    logging.debug(f"worker-{n}: checkpoint1 = {
                   time.time() - start_time:06.3f}")
 
     # cpu-bound
@@ -25,47 +28,54 @@ def worker(n, start_time):
         # check progress
         if i == CPU_LOAD//4*1:
             logging.debug(
-                f"worker_{n}: checkpoint1-1 = {time.time() - start_time:06.3f}")
+                f"worker-{n}: checkpoint1-1 = {time.time() - start_time:06.3f}")
         elif i == CPU_LOAD//4*2:
             logging.debug(
-                f"worker_{n}: checkpoint1-2 = {time.time() - start_time:06.3f}")
+                f"worker-{n}: checkpoint1-2 = {time.time() - start_time:06.3f}")
         elif i == CPU_LOAD//4*3:
             logging.debug(
-                f"worker_{n}: checkpoint1-3 = {time.time() - start_time:06.3f}")
+                f"worker-{n}: checkpoint1-3 = {time.time() - start_time:06.3f}")
 
-    logging.debug(f"worker_{n}: checkpoint2 = {
+    logging.debug(f"worker-{n}: checkpoint2 = {
                   time.time() - start_time:06.3f}")
 
     # io-bound
-    """
-    The I/O bounds should actually be verified using such as the following libraries, but this time, I will simplify that part by replacing with time.sleep() as an example.
- 	- File I/O -> files -> built-in modules/functions
-	- Network I/O (HTTP) -> requests
-	- Network I/O (DB) -> sqlite
-    """
     time.sleep(IO_LATENCY)
 
-    logging.debug(f"worker_{n}: checkpoint3 = {
+    logging.debug(f"worker-{n}: checkpoint3 = {
                   time.time() - start_time:06.3f}")
 
    # cpu-bound
     for i in range(CPU_LOAD):
-        pass
+        # check progress
+        if i == CPU_LOAD//4*1:
+            logging.debug(
+                f"worker-{n}: checkpoint3-1 = {time.time() - start_time:06.3f}")
+        elif i == CPU_LOAD//4*2:
+            logging.debug(
+                f"worker-{n}: checkpoint3-2 = {time.time() - start_time:06.3f}")
+        elif i == CPU_LOAD//4*3:
+            logging.debug(
+                f"worker-{n}: checkpoint3-3 = {time.time() - start_time:06.3f}")
 
-    logging.debug(f"worker_{n}: checkpoint4 = {
+    logging.debug(f"worker-{n}: checkpoint4 = {
                   time.time() - start_time:06.3f}")
-    logging.debug(f"worker_{n}: end")
-
-# This is wrapper for worker() to separate arguments
+    logging.debug(f"worker-{n}: end")
 
 
 def wrap_worker(args):
+    """
+    This is wrapper for worker() to separate arguments
+    """
     return worker(*args)
 
 
 async def worker_async(n, start_time):
-    logging.debug(f"worker_{n}: start")
-    logging.debug(f"worker_{n}: checkpoint1 = {
+    """
+    For asyncio
+    """
+    logging.debug(f"worker-{n}: start")
+    logging.debug(f"worker-{n}: checkpoint1 = {
                   time.time() - start_time:06.3f}")
 
     # cpu-bound
@@ -73,43 +83,46 @@ async def worker_async(n, start_time):
         # check progress
         if i == CPU_LOAD//4*1:
             logging.debug(
-                f"worker_{n}: checkpoint1-1 = {time.time() - start_time:06.3f}")
+                f"worker-{n}: checkpoint1-1 = {time.time() - start_time:06.3f}")
         elif i == CPU_LOAD//4*2:
             logging.debug(
-                f"worker_{n}: checkpoint1-2 = {time.time() - start_time:06.3f}")
+                f"worker-{n}: checkpoint1-2 = {time.time() - start_time:06.3f}")
         elif i == CPU_LOAD//4*3:
             logging.debug(
-                f"worker_{n}: checkpoint1-3 = {time.time() - start_time:06.3f}")
+                f"worker-{n}: checkpoint1-3 = {time.time() - start_time:06.3f}")
 
-    logging.debug(f"worker_{n}: checkpoint2 = {
+    logging.debug(f"worker-{n}: checkpoint2 = {
                   time.time() - start_time:06.3f}")
 
     # io-bound
-    """
-    The I/O bounds should actually be verified using such as the following libraries, but this time, I will simplify that part by replacing with asyncio.sleep() as an example.
-	- File I/O -> aiofiles
-	- Network I/O (HTTP) -> aiohttp 
-	- Network I/O (DB) -> aiosqlite
-    """
     await asyncio.sleep(IO_LATENCY)
 
-    logging.debug(f"worker_{n}: checkpoint3 = {
+    logging.debug(f"worker-{n}: checkpoint3 = {
                   time.time() - start_time:06.3f}")
 
     # cpu-bound
     for i in range(CPU_LOAD):
-        pass
+        # check progress
+        if i == CPU_LOAD//4*1:
+            logging.debug(
+                f"worker-{n}: checkpoint3-1 = {time.time() - start_time:06.3f}")
+        elif i == CPU_LOAD//4*2:
+            logging.debug(
+                f"worker-{n}: checkpoint3-2 = {time.time() - start_time:06.3f}")
+        elif i == CPU_LOAD//4*3:
+            logging.debug(
+                f"worker-{n}: checkpoint3-3 = {time.time() - start_time:06.3f}")
 
-    logging.debug(f"worker_{n}: checkpoint4 = {
+    logging.debug(f"worker-{n}: checkpoint4 = {
                   time.time() - start_time:06.3f}")
-    logging.debug(f"worker_{n}: end")
+    logging.debug(f"worker-{n}: end")
 
 if __name__ == '__main__':
     # 1.synchronous
     logging.debug(f"synchronous: start")
     start = time.time()
 
-    for i in range(WORK_MULTIPLICITY):
+    for i in range(1, WORK_MULTIPLICITY+1):
         worker(i, start)
 
     end_1 = time.time() - start
@@ -121,7 +134,7 @@ if __name__ == '__main__':
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(asyncio.gather(
-        *[worker_async(i, start) for i in range(WORK_MULTIPLICITY)]))
+        *[worker_async(i, start) for i in range(1, WORK_MULTIPLICITY+1)]))
     loop.close()
 
     end_2 = time.time() - start
@@ -131,7 +144,7 @@ if __name__ == '__main__':
     logging.debug(f"threading: start")
     start = time.time()
 
-    for i in range(WORK_MULTIPLICITY):
+    for i in range(1, WORK_MULTIPLICITY+1):
         threading.Thread(target=worker, args=(i, start)).start()
     for thread in threading.enumerate():
         if thread is not threading.current_thread():
@@ -144,7 +157,7 @@ if __name__ == '__main__':
     logging.debug(f"multiprocessing: start")
     start = time.time()
 
-    args = [(i, start) for i in range(WORK_MULTIPLICITY)]
+    args = [(i, start) for i in range(1, WORK_MULTIPLICITY+1)]
     with multiprocessing.Pool(processes=WORK_MULTIPLICITY) as pool:
         pool.map(wrap_worker, args)
 
